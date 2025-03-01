@@ -10,7 +10,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 # Configure Gemini API
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# Choose a model (use "gemini-1.5-flash" for free access)
+# Choose a model
 MODEL_NAME = "gemini-1.5-flash"
 
 # Function to generate MCQs
@@ -37,48 +37,68 @@ def generate_mcqs(topic):
 if "mcqs" not in st.session_state:
     st.session_state.mcqs = None
 if "answers" not in st.session_state:
-    st.session_state.answers = {}  # Stores user's selected options
+    st.session_state.answers = {}
 if "score" not in st.session_state:
     st.session_state.score = 0
 if "answered" not in st.session_state:
-    st.session_state.answered = set()  # Stores answered questions
+    st.session_state.answered = set()
 
-# Custom CSS
+# Custom CSS for styling
 st.markdown("""
     <style>
+        body {
+            background-color: #F5F5DC;
+        }
         .mcq-box {
-            background-color: #222;
+            background-color: #EEE8AA;
             padding: 15px;
             border-radius: 10px;
-            box-shadow: 0px 0px 8px #ff00ff;
+            box-shadow: 0px 0px 8px #800080;
             margin: 10px 0;
+        }
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #800080;
+            text-align: center;
         }
         .question {
             font-size: 18px;
             font-weight: bold;
-            color: #ff00ff;
+            color: #800080;
             text-align: center;
         }
         .answer {
             font-size: 16px;
             font-weight: bold;
-            color: white;
+            color: black;
             margin-top: 10px;
             text-align: center;
         }
         .score {
             font-size: 20px;
             font-weight: bold;
-            color: #ff00ff;
+            color: #800080;
             text-align: center;
             margin-top: 20px;
+        }
+        .stButton > button {
+            background-color: #800080 !important;
+            color: white !important;
+            font-size: 16px;
+            padding: 10px;
+            transition: 0.3s ease-in-out;
+        }
+        .stButton > button:hover {
+            background-color: white !important;
+            color: #800080 !important;
+            border: 2px solid #800080;
         }
     </style>
 """, unsafe_allow_html=True)
 
 # Streamlit UI
-st.title("0labs")
-st.markdown("<h1 style='text-align: center; color: #ff00ff;'> AI-Powered MCQ Generator</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='title'>0labs - AI-Powered MCQ Generator</h1>", unsafe_allow_html=True)
 
 # Input field for topic
 topic = st.text_input("Enter a topic for MCQs:")
@@ -87,13 +107,10 @@ if st.button("⚡ Generate MCQs"):
     if topic:
         with st.spinner("⏳ Generating MCQs..."):
             mcqs_text = generate_mcqs(topic)
-
-            # Store MCQs in session state
-            mcqs_list = mcqs_text.strip().split("\n\n")  # Split each question
-            st.session_state.mcqs = mcqs_list
-            st.session_state.answers = {}  # Reset selections
-            st.session_state.score = 0  # Reset score
-            st.session_state.answered = set()  # Reset answered questions
+            st.session_state.mcqs = mcqs_text.strip().split("\n\n")
+            st.session_state.answers = {}
+            st.session_state.score = 0
+            st.session_state.answered = set()
     else:
         st.warning("⚠️ Please enter a topic!")
 
@@ -109,19 +126,15 @@ if st.session_state.mcqs:
             st.markdown(f"<div class='mcq-box'>", unsafe_allow_html=True)
             st.markdown(f"<p class='question'>{question}</p>", unsafe_allow_html=True)
 
-            # Show options using radio buttons (allows instant updates)
             selected_option = st.radio(f"Choose an answer:", options, index=None, key=f"q_{i}")
 
-            # Store answer when selected
             if selected_option and i not in st.session_state.answered:
                 st.session_state.answers[i] = selected_option
                 st.session_state.answered.add(i)
 
-                # Check correctness
                 if selected_option.startswith(correct_answer):
                     st.session_state.score += 1
 
-            # Show correct answer after selection
             if i in st.session_state.answered:
                 if st.session_state.answers[i].startswith(correct_answer):
                     st.markdown(f"<p class='answer' style='color: #00ff00;'>✅ Correct! Answer: {correct_answer}</p>", unsafe_allow_html=True)
